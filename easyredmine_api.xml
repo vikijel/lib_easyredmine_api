@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<extension type="library" version="2.5" method="upgrade">
+	<name>EasyRedmine API</name>
+	<libraryname>easyredmine_api</libraryname>
+	<version>1.2.1</version>
+	<license>http://opensource.org/licenses/LGPL-3.0 LGPL-3.0</license>
+	<author>EasyJoomla.org</author>
+	<authorEmail>support@easyjoomla.org</authorEmail>
+	<authorUrl>http://www.easyjoomla.org</authorUrl>
+	<copyright>Copyright 2014 EasyJoomla.org - All rights reserved.</copyright>
+	<creationDate>2014-10-20</creationDate>
+	<description>Library for calling Redmine XML REST API from Joomla</description>
+	<files>
+		<file>rest.php</file>
+		<file>http.php</file>
+		<folder>rest</folder>
+	</files>
+	<updateservers>
+		<server type="easyjoomla" priority="1" name="Easy Joomla Update">
+			<![CDATA[http://www.easyjoomla.org/index.php?option=com_easyupdate&view=easyupdate&element=lib_easyredmine_api]]>
+		</server>
+	</updateservers>
+</extension>
