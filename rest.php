@@ -367,6 +367,22 @@ class EasyRedmineRestApi implements EasyRedmineRestApiInterface
 	}
 
 	/**
+	 * @param boolean $cache_detail
+	 */
+	public function setCacheDetail($cache_detail)
+	{
+		$this->cache_detail = $cache_detail;
+	}
+
+	/**
+	 * @param boolean $cache_list
+	 */
+	public function setCacheList($cache_list)
+	{
+		$this->cache_list = $cache_list;
+	}
+
+	/**
 	 * @param object $object Object to store as Redmine entity
 	 */
 	protected function _beforeStore(&$object)
