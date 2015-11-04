@@ -132,7 +132,7 @@ class EasyRedmineRestApi implements EasyRedmineRestApiInterface
 		}
 
 		$context     = str_replace('.', '/', $context);
-		$instance_id = $context . ':' . $er_url . ':' . $api_key . ':' . (int) $write_log;
+		$instance_id = md5($context . ':' . $er_url . ':' . $api_key . ':' . (int) $write_log);
 
 		if (!isset($instances[$instance_id]) or $force_new)
 		{
@@ -149,6 +149,10 @@ class EasyRedmineRestApi implements EasyRedmineRestApiInterface
 					$path_prefix .= $a[$i] . '.';
 					$class_prefix .= ucfirst($a[$i]);
 				}
+
+				$class_prefix_arr = explode('_', $class_prefix);
+				$class_prefix_arr = array_map('ucfirst', $class_prefix_arr);
+				$class_prefix     = implode('', $class_prefix_arr);
 			}
 
 			$entity = end($a);
@@ -236,11 +240,11 @@ class EasyRedmineRestApi implements EasyRedmineRestApiInterface
 	 */
 	public function getList($filters = array())
 	{
-		$filters  = (array) $filters;
+		$filters = (array) $filters;
 
 		if ($this->cache_list)
 		{
-			$cache_id = get_class($this).'.'.__FUNCTION__ . '.' . JArrayHelper::toString($filters);
+			$cache_id = get_class($this) . '.' . __FUNCTION__ . '.' . JArrayHelper::toString($filters);
 
 			if (isset(self::$cache[$cache_id]) and !empty(self::$cache[$cache_id]))
 			{
@@ -290,7 +294,7 @@ class EasyRedmineRestApi implements EasyRedmineRestApiInterface
 
 		if ($this->cache_detail)
 		{
-			$cache_id = get_class($this).'.'.__FUNCTION__ . '.' . $id . '.' . JArrayHelper::toString($params);
+			$cache_id = get_class($this) . '.' . __FUNCTION__ . '.' . $id . '.' . JArrayHelper::toString($params);
 
 			if (isset(self::$cache[$cache_id]) and !empty(self::$cache[$cache_id]))
 			{
