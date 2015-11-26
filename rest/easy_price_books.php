@@ -1,7 +1,7 @@
 <?php
 /**
  * @author         EasyJoomla.org
- * @copyright      ©2014 EasyJoomla.org
+ * @copyright      ©2015 EasyJoomla.org
  * @license        http://opensource.org/licenses/LGPL-3.0 LGPL-3.0
  * @package        Joomla
  * @subauthor      VikiJel

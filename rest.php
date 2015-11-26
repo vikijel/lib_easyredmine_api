@@ -1,7 +1,7 @@
 <?php
 /**
  * @author         EasyJoomla.org, VikiJel <vikijel@gmail.com>
- * @copyright      ©2013-2014 EasyJoomla.org
+ * @copyright      ©2013-2015 EasyJoomla.org
  * @license        http://opensource.org/licenses/LGPL-3.0 LGPL-3.0
  * @package        Joomla
  * @version        @see easyredmine_api.xml
@@ -690,8 +690,6 @@ class EasyRedmineRestApi implements EasyRedmineRestApiInterface
 			$uri->setQuery(array());
 		}
 
-		$uri->setVar('key', $this->api_key);
-
 		if ($this->lang_parameter != '' and $this->lang != '')
 		{
 			$uri->setVar($this->lang_parameter, $this->lang);
@@ -703,9 +701,11 @@ class EasyRedmineRestApi implements EasyRedmineRestApiInterface
 		curl_setopt($c, CURLOPT_CONNECTTIMEOUT, 30);
 		curl_setopt($c, CURLOPT_TIMEOUT, 120);
 
+		$headers = array('X-Redmine-API-Key: ' . $this->api_key);
+
 		if (!empty($xml) and $method != 'upload')
 		{
-			curl_setopt($c, CURLOPT_HTTPHEADER, array('Content-type: text/xml'));
+			$headers[] = 'Content-type: text/xml';
 		}
 
 		switch ($method)
@@ -720,7 +720,7 @@ class EasyRedmineRestApi implements EasyRedmineRestApiInterface
 				break;
 
 			case 'upload':
-				curl_setopt($c, CURLOPT_HTTPHEADER, array('Content-Type: application/octet-stream'));
+				$headers[] = 'Content-Type: application/octet-stream';
 				curl_setopt($c, CURLOPT_POST, 1);
 				curl_setopt($c, CURLOPT_POSTFIELDS, $xml);
 				break;
@@ -734,6 +734,11 @@ class EasyRedmineRestApi implements EasyRedmineRestApiInterface
 				curl_setopt($c, CURLOPT_CUSTOMREQUEST, 'DELETE');
 				curl_setopt($c, CURLOPT_POSTFIELDS, $xml);
 				break;
+		}
+
+		if (!empty($headers))
+		{
+			curl_setopt($c, CURLOPT_HTTPHEADER, $headers);
 		}
 
 		$this->_writeLog('Request: ' . $uri->toString() . ' | ' . $method . ' | ' . $xml);

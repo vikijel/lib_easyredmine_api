@@ -2,13 +2,13 @@
 <extension type="library" version="2.5" method="upgrade">
 	<name>EasyRedmine API</name>
 	<libraryname>easyredmine_api</libraryname>
-	<version>1.5.0</version>
+	<version>1.6.0</version>
 	<license>http://opensource.org/licenses/LGPL-3.0 LGPL-3.0</license>
 	<author>EasyJoomla.org</author>
 	<authorEmail>support@easyjoomla.org</authorEmail>
 	<authorUrl>http://www.easyjoomla.org</authorUrl>
-	<copyright>Copyright 2014 EasyJoomla.org - All rights reserved.</copyright>
-	<creationDate>2014-10-20</creationDate>
+	<copyright>Copyright 2013 - 2015 EasyJoomla.org - All rights reserved.</copyright>
+	<creationDate>November 2015</creationDate>
 	<description>Library for calling Redmine XML REST API from Joomla</description>
 	<files>
 		<file>rest.php</file>
