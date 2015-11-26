@@ -948,10 +948,10 @@ class EasyRedmineRestApi implements EasyRedmineRestApiInterface
 	 */
 	protected function _checkConfig()
 	{
-		if (trim($this->api_key) == '' or trim($this->er_url) == '')
-		{
-			return $this->_throwException('Missing argument(s) $er_url and/or $api_key in ' . get_class($this) . '::__construct()');
-		}
+//		if (trim($this->api_key) == '' or trim($this->er_url) == '')
+//		{
+//			return $this->_throwException('Missing argument(s) $er_url and/or $api_key in ' . get_class($this) . '::__construct()');
+//		}
 
 		if (!filter_var($this->er_url, FILTER_VALIDATE_URL, array(FILTER_FLAG_SCHEME_REQUIRED, FILTER_FLAG_HOST_REQUIRED)))
 		{
