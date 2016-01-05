@@ -286,7 +286,8 @@ class EasyRedmineHttpApi
 					return $data;
 				}
 
-				$last_url = parse_url(curl_getinfo($ch, CURLINFO_EFFECTIVE_URL));
+				$effective_url = curl_getinfo($ch, CURLINFO_EFFECTIVE_URL);
+				$last_url      = parse_url($effective_url);
 
 				if (!isset($url['scheme']))
 				{
@@ -302,6 +303,8 @@ class EasyRedmineHttpApi
 				}
 
 				$new_url = $url['scheme'] . '://' . $url['host'] . $url['path'] . (isset($url['query']) ? '?' . $url['query'] : '');
+
+				$this->_writeLog('CURL Redirect:' . $effective_url . ' => ' . $new_url);
 
 				curl_setopt($ch, CURLOPT_URL, $new_url);
 
