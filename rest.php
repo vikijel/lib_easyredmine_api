@@ -60,6 +60,12 @@ class EasyRedmineRestApi implements EasyRedmineRestApiInterface
 	/** @var int $curl_done_loops */
 	protected $curl_done_loops = 0;
 
+	/** @var int Timeout for the connect phase (in seconds) */
+	protected $curl_connect_timeout = 30;
+
+	/** @var int Maximum time (in seconds) the request is allowed to take  */
+	protected $curl_timeout = 120;
+
 	/** @var array Messages for http error codes */
 	private $http_code_message = array(
 		400 => 'Bad Request',
@@ -204,6 +210,8 @@ class EasyRedmineRestApi implements EasyRedmineRestApiInterface
 	 * @param $lang string Joomla language tag (at least first 2 letters)
 	 *
 	 * @since 1.0.6
+	 *
+	 * @return $this
 	 */
 	public function setLanguage($lang = null)
 	{
@@ -217,6 +225,8 @@ class EasyRedmineRestApi implements EasyRedmineRestApiInterface
 			// cs-CZ => cs
 			$this->lang = strtolower(substr($lang, 0, 2));
 		}
+
+		return $this;
 	}
 
 	/**
@@ -225,10 +235,13 @@ class EasyRedmineRestApi implements EasyRedmineRestApiInterface
 	 * @param $lang_parameter string Name of request parameter for api language
 	 *
 	 * @since 1.0.6
+	 * @return $this
 	 */
 	public function setLanguageParameter($lang_parameter)
 	{
 		$this->lang_parameter = $lang_parameter;
+
+		return $this;
 	}
 
 	/**
@@ -372,18 +385,50 @@ class EasyRedmineRestApi implements EasyRedmineRestApiInterface
 
 	/**
 	 * @param boolean $cache_detail
+	 *
+	 * @return $this
 	 */
 	public function setCacheDetail($cache_detail)
 	{
 		$this->cache_detail = $cache_detail;
+
+		return $this;
 	}
 
 	/**
 	 * @param boolean $cache_list
+	 *
+	 * @return $this
 	 */
 	public function setCacheList($cache_list)
 	{
 		$this->cache_list = $cache_list;
+
+		return $this;
+	}
+
+	/**
+	 * @param int $curl_connect_timeout
+	 *
+	 * @return $this
+	 */
+	public function setCurlConnectTimeout($curl_connect_timeout)
+	{
+		$this->curl_connect_timeout = (int) $curl_connect_timeout;
+
+		return $this;
+	}
+
+	/**
+	 * @param int $curl_timeout
+	 *
+	 * @return $this
+	 */
+	public function setCurlTimeout($curl_timeout)
+	{
+		$this->curl_timeout = (int) $curl_timeout;
+
+		return $this;
 	}
 
 	/**
@@ -430,7 +475,7 @@ class EasyRedmineRestApi implements EasyRedmineRestApiInterface
 
 						foreach ($property_value as $custom_field)
 						{
-							if (isset($custom_field['id']) and intval($custom_field['id']) and isset($custom_field['value']))
+							if (isset($custom_field['id']) and (int) $custom_field['id'] and isset($custom_field['value']))
 							{
 								if (isset($custom_field['lookup']) and $custom_field['lookup'])
 								{
@@ -698,8 +743,8 @@ class EasyRedmineRestApi implements EasyRedmineRestApiInterface
 		curl_setopt($c, CURLOPT_URL, $uri->toString());
 		curl_setopt($c, CURLOPT_RETURNTRANSFER, 1);
 		curl_setopt($c, CURLOPT_SSL_VERIFYPEER, false);
-		curl_setopt($c, CURLOPT_CONNECTTIMEOUT, 30);
-		curl_setopt($c, CURLOPT_TIMEOUT, 120);
+		curl_setopt($c, CURLOPT_CONNECTTIMEOUT, $this->curl_connect_timeout);
+		curl_setopt($c, CURLOPT_TIMEOUT, $this->curl_timeout);
 
 		$headers = array('X-Redmine-API-Key: ' . $this->api_key);
 
@@ -743,19 +788,27 @@ class EasyRedmineRestApi implements EasyRedmineRestApiInterface
 
 		$this->_writeLog('Request: ' . $uri->toString() . ' | ' . $method . ' | ' . $xml);
 
-		$response = $this->_curl_exec($c);
-		$r_code   = curl_getinfo($c, CURLINFO_HTTP_CODE);
-		$con_type = curl_getinfo($c, CURLINFO_CONTENT_TYPE);
-		$arr      = explode(';', $con_type, 2);
-		$r_type   = reset($arr);
+		$response      = $this->_curl_exec($c);
+		$r_code        = curl_getinfo($c, CURLINFO_HTTP_CODE);
+		$con_type      = curl_getinfo($c, CURLINFO_CONTENT_TYPE);
+		$arr           = explode(';', $con_type, 2);
+		$r_type        = reset($arr);
+		$return        = new StdClass();
+		$return->error = curl_error($c);
+		$return->code  = $r_code;
+		$return->type  = $r_type;
+
+		if ($return->error != '')
+		{
+			$msg = 'Curl error: ' . $return->error;
+
+			$this->_writeLog($msg, JLog::ERROR);
+			$this->setError($msg);
+		}
 
 		curl_close($c);
 
 		$this->_writeLog('Response: ' . $r_code . ' | ' . $r_type . ' | ' . $response);
-
-		$return       = new StdClass();
-		$return->code = $r_code;
-		$return->type = $r_type;
 
 		if ($return->code >= 400)
 		{
@@ -994,13 +1047,13 @@ class EasyRedmineRestApi implements EasyRedmineRestApiInterface
 	 *
 	 * @param string $message
 	 *
-	 * @return boolean
+	 * @return $this
 	 */
 	public function setError($message)
 	{
 		$this->errors[] = (string) $message;
 
-		return true;
+		return $this;
 	}
 
 	/**
@@ -1008,7 +1061,7 @@ class EasyRedmineRestApi implements EasyRedmineRestApiInterface
 	 *
 	 * @param array $array
 	 *
-	 * @return boolean
+	 * @return $this
 	 */
 	public function setErrors($array)
 	{
@@ -1022,7 +1075,7 @@ class EasyRedmineRestApi implements EasyRedmineRestApiInterface
 			$this->setError($array);
 		}
 
-		return true;
+		return $this;
 	}
 
 	/**
