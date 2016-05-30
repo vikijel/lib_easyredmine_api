@@ -15,11 +15,11 @@ jimport('easyredmine_api.rest');
  * @author     VikiJel
  * @package    Joomla
  */
-class EasyRedmineRestApiEasyContacts extends EasyRedmineRestApi
+class EasyRedmineRestApiEasyKnowledgeGlobals extends EasyRedmineRestApi
 {
 	/** @var string $context */
-	protected $context = 'easy_contacts';
+	protected $context = 'easy_knowledge_globals';
 
 	/** @var string $context_one */
-	protected $context_one = 'easy_contact';
+	protected $context_one = 'easy_knowledge_story';
 }
