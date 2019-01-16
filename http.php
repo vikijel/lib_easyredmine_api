@@ -26,6 +26,9 @@ class EasyRedmineHttpApi
 	/** @var boolean $write_log */
 	protected $write_log = true;
 
+	/** @var bool */
+	public $allow_redirects = false;
+
 	/** @var int $curl_max_loops */
 	protected $curl_max_loops = 20;
 
@@ -271,7 +274,7 @@ class EasyRedmineHttpApi
 
 			$http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
 
-			if ($http_code == 301 || $http_code == 302)
+			if ($this->allow_redirects and ($http_code == 301 || $http_code == 302))
 			{
 				$matches = array();
 

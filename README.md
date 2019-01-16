@@ -6,6 +6,9 @@
 -	License:   http://opensource.org/licenses/GPL-3.0 GPL-3.0
 -	Copyright: 2015 Easy Software s.r.o.
 
+##  Requirements
+-   SimpleXML extension installed and enabled in PHP
+
 ##	Basic usage
 
 ### Importing library

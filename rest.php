@@ -22,7 +22,7 @@ jimport('easyredmine_api.rest._xmlelement');
 class EasyRedmineRestApi implements EasyRedmineRestApiInterface
 {
 	/** @var array $errors */
-	protected $errors = array();
+	protected $errors = [];
 
 	/** @var string $context */
 	protected $context = '_default_';
@@ -45,6 +45,9 @@ class EasyRedmineRestApi implements EasyRedmineRestApiInterface
 	/** @var boolean $write_log */
 	protected $write_log = true;
 
+	/** @var bool */
+	public $allow_redirects = true;
+
 	/** @var boolean $cache_list */
 	protected $cache_list = true;
 
@@ -52,7 +55,7 @@ class EasyRedmineRestApi implements EasyRedmineRestApiInterface
 	protected $cache_detail = true;
 
 	/** @var array $cache */
-	protected static $cache = array();
+	protected static $cache = [];
 
 	/** @var int $curl_max_loops */
 	protected $curl_max_loops = 4;
@@ -63,11 +66,11 @@ class EasyRedmineRestApi implements EasyRedmineRestApiInterface
 	/** @var int Timeout for the connect phase (in seconds) */
 	protected $curl_connect_timeout = 30;
 
-	/** @var int Maximum time (in seconds) the request is allowed to take  */
+	/** @var int Maximum time (in seconds) the request is allowed to take */
 	protected $curl_timeout = 120;
 
 	/** @var array Messages for http error codes */
-	private $http_code_message = array(
+	private $http_code_message = [
 		400 => 'Bad Request',
 		401 => 'Unauthorized',
 		402 => 'Payment Required',
@@ -114,7 +117,7 @@ class EasyRedmineRestApi implements EasyRedmineRestApiInterface
 		511 => 'Network Authentication Required',
 		598 => 'Network read timeout error',
 		599 => 'Network connect timeout error'
-	);
+	];
 
 	/**
 	 * @since 1.1.0
@@ -134,7 +137,7 @@ class EasyRedmineRestApi implements EasyRedmineRestApiInterface
 
 		if (!isset($instances))
 		{
-			$instances = array();
+			$instances = [];
 		}
 
 		$context     = str_replace('.', '/', $context);
@@ -251,13 +254,13 @@ class EasyRedmineRestApi implements EasyRedmineRestApiInterface
 	 *
 	 * @returns EasyRedmineXmlElement|false
 	 */
-	public function getList($filters = array())
+	public function getList($filters = [])
 	{
 		$filters = (array) $filters;
 
 		if ($this->cache_list)
 		{
-			$cache_id = get_class($this) . '.' . __FUNCTION__ . '.' . JArrayHelper::toString($filters);
+			$cache_id = get_class($this) . '.' . __FUNCTION__ . '.' . JArrayHelper::toString($filters) . '.' . $this->lang;
 
 			if (isset(self::$cache[$cache_id]) and !empty(self::$cache[$cache_id]))
 			{
@@ -300,14 +303,14 @@ class EasyRedmineRestApi implements EasyRedmineRestApiInterface
 	 *
 	 * @returns EasyRedmineXmlElement|false
 	 */
-	public function get($id, $params = array())
+	public function get($id, $params = [])
 	{
 		$id       = (int) $id;
 		$cache_id = '';
 
 		if ($this->cache_detail)
 		{
-			$cache_id = get_class($this) . '.' . __FUNCTION__ . '.' . $id . '.' . JArrayHelper::toString($params);
+			$cache_id = get_class($this) . '.' . __FUNCTION__ . '.' . $id . '.' . JArrayHelper::toString($params) . '.' . $this->lang;
 
 			if (isset(self::$cache[$cache_id]) and !empty(self::$cache[$cache_id]))
 			{
@@ -356,7 +359,7 @@ class EasyRedmineRestApi implements EasyRedmineRestApiInterface
 	public function delete($id, &$response = null)
 	{
 		$id           = (int) $id;
-		$this->errors = array();
+		$this->errors = [];
 
 		if (!$id)
 		{
@@ -448,7 +451,7 @@ class EasyRedmineRestApi implements EasyRedmineRestApiInterface
 	 */
 	public function store(&$object, &$response = null)
 	{
-		$this->errors = array();
+		$this->errors = [];
 
 		if (!$this->validateStore($object))
 		{
@@ -459,127 +462,134 @@ class EasyRedmineRestApi implements EasyRedmineRestApiInterface
 
 		$this->_beforeStore($object);
 
-		$xml        = new EasyRedmineXMLElement('<' . $this->context_one . '/>');
-		$properties = get_object_vars($object);
-
-		foreach ($properties as $property_name => $property_value)
+		if ($object instanceof SimpleXMLElement)
 		{
-			switch ($property_name)
+			$xml = $object; //for support of sending back entities obtained from api (such as get() + alter + store())
+		}
+		else
+		{
+			$xml        = new EasyRedmineXmlElement('<' . $this->context_one . '/>');
+			$properties = get_object_vars($object);
+
+			foreach ($properties as $property_name => $property_value)
 			{
-				case 'custom_fields':
+				switch ($property_name)
+				{
+					case 'custom_fields':
 
-					if (is_array($property_value) and !empty($property_value))
-					{
-						$xml_cf = $xml->addChild('custom_fields');
-						$xml_cf->addAttribute('type', 'array');
-
-						foreach ($property_value as $custom_field)
+						if (is_array($property_value) and !empty($property_value))
 						{
-							if (isset($custom_field['id']) and (int) $custom_field['id'] and isset($custom_field['value']))
+							$xml_cf = $xml->addChild('custom_fields');
+							$xml_cf->addAttribute('type', 'array');
+
+							foreach ($property_value as $custom_field)
 							{
-								if (isset($custom_field['lookup']) and $custom_field['lookup'])
+								if (isset($custom_field['id']) and (int) $custom_field['id'] and isset($custom_field['value']))
 								{
-									$cf = $xml_cf->addChild('custom_field');
-									$cf->addAttribute('id', (int) $custom_field['id']);
-
-									$v  = $cf->addChild('value');
-									$v2 = $v->addChild('selected_value');
-									$v3 = $v2->addChild((int) $custom_field['value']);
-
-									$v3->addChild('id', (int) $custom_field['value']);
-									$v3->addChild('display_name', $custom_field['display_name']);
-								}
-								else
-								{
-									$cf = $xml_cf->addChild('custom_field');
-									$cf->addAttribute('id', (int) $custom_field['id']);
-
-									if (is_array($custom_field['value']))
+									if (isset($custom_field['lookup']) and $custom_field['lookup'])
 									{
-										$v0 = $cf->addChild('value');
-										$v0->addAttribute('type', 'array');
+										$cf = $xml_cf->addChild('custom_field');
+										$cf->addAttribute('id', (int) $custom_field['id']);
 
-										foreach ($custom_field['value'] as $cf_val)
-										{
-											$v0->addChildCData('value', $cf_val);
-										}
+										$v  = $cf->addChild('value');
+										$v2 = $v->addChild('selected_value');
+										$v3 = $v2->addChild((int) $custom_field['value']);
+
+										$v3->addChild('id', (int) $custom_field['value']);
+										$v3->addChild('display_name', $custom_field['display_name']);
 									}
 									else
 									{
-										$cf->addChildCData('value', $custom_field['value']);
+										$cf = $xml_cf->addChild('custom_field');
+										$cf->addAttribute('id', (int) $custom_field['id']);
+
+										if (is_array($custom_field['value']))
+										{
+											$v0 = $cf->addChild('value');
+											$v0->addAttribute('type', 'array');
+
+											foreach ($custom_field['value'] as $cf_val)
+											{
+												$v0->addChildCData('value', $cf_val);
+											}
+										}
+										else
+										{
+											$cf->addChildCData('value', $custom_field['value']);
+										}
 									}
 								}
 							}
 						}
-					}
-					break;
+						break;
 
-				case 'uploads':
+					case 'uploads':
 
-					if (is_array($property_value) and !empty($property_value))
-					{
-						$xml_up = $xml->addChild('uploads');
-						$xml_up->addAttribute('type', 'array');
-
-						foreach ($property_value as $upload)
+						if (is_array($property_value) and !empty($property_value))
 						{
-							if (isset($upload['filename']) and isset($upload['token']) and isset($upload['content_type']))
+							$xml_up = $xml->addChild('uploads');
+							$xml_up->addAttribute('type', 'array');
+
+							foreach ($property_value as $upload)
 							{
-								$up = $xml_up->addChild('upload');
-								$up->addChild('token', $upload['token']);
-								$up->addChild('filename', $upload['filename']);
-								$up->addChild('content_type', $upload['content_type']);
+								if (isset($upload['filename']) and isset($upload['token']) and isset($upload['content_type']))
+								{
+									$up = $xml_up->addChild('upload');
+									$up->addChild('token', $upload['token']);
+									$up->addChild('filename', $upload['filename']);
+									$up->addChild('content_type', $upload['content_type']);
+								}
 							}
 						}
-					}
-					break;
+						break;
 
-				case 'easy_crm_case_items':
+					case 'easy_crm_case_items':
 
-					if (is_array($property_value) and !empty($property_value))
-					{
-						$xml_up = $xml->addChild('easy_crm_case_items_attributes');
-						$xml_up->addAttribute('type', 'array');
-
-						foreach ($property_value as $item)
+						if (is_array($property_value) and !empty($property_value))
 						{
-							$it = $xml_up->addChild('easy_crm_case_item');
+							$xml_up = $xml->addChild('easy_crm_case_items_attributes');
+							$xml_up->addAttribute('type', 'array');
 
-							foreach ($item as $item_property_name => $item_property_value)
+							foreach ($property_value as $item)
 							{
-								$it->addChildCData($item_property_name, $item_property_value);
+								$it = $xml_up->addChild('easy_crm_case_item');
+
+								foreach ($item as $item_property_name => $item_property_value)
+								{
+									$it->addChildCData($item_property_name, $item_property_value);
+								}
 							}
 						}
-					}
-					break;
+						break;
 
-				default:
+					default:
 
-					if (is_array($property_value))
-					{
-						$xml_arr = $xml->addChild($property_name);
-						$xml_arr->addAttribute('type', 'array');
-
-						foreach ($property_value as $pn => $pv)
+						if (is_array($property_value))
 						{
-							if (is_array($pv))
+							$xml_arr = $xml->addChild($property_name);
+							$xml_arr->addAttribute('type', 'array');
+
+							foreach ($property_value as $pn => $pv)
 							{
-								$a_key = array_keys($pv);
-								$a_val = array_values($pv);
-								$xml_arr->addChildCData($a_key[0], (string) $a_val[0]);
-							}
-							else
-							{
-								$xml_arr->addChildCData($pn, (string) $pv);
+								if (is_array($pv))
+								{
+									$a_key = array_keys($pv);
+									$a_val = array_values($pv);
+									$xml_arr->addChildCData($a_key[0], (string) $a_val[0]);
+								}
+								else
+								{
+									$xml_arr->addChildCData($pn, (string) $pv);
+								}
 							}
 						}
-					}
-					else
-					{
-						$xml->addChildCData($property_name, (string) $property_value);
-					}
+						else
+						{
+							$xml->addChildCData($property_name, (string) $property_value);
+						}
 
-					break;
+						break;
+				}
 			}
 		}
 
@@ -616,7 +626,7 @@ class EasyRedmineRestApi implements EasyRedmineRestApiInterface
 			}
 		}
 
-		$object->id = (int) $response->body->id ? (int) $response->body->id : $object->id;
+		$object->id = (isset($response->body->id) and (int) $response->body->id) ? (int) $response->body->id : $object->id;
 
 		return true;
 	}
@@ -632,7 +642,7 @@ class EasyRedmineRestApi implements EasyRedmineRestApiInterface
 	{
 		$object     = (object) $object;
 		$valid      = true;
-		$errors     = array();
+		$errors     = [];
 		$properties = get_object_vars($object);
 
 		if (empty($properties))
@@ -703,6 +713,18 @@ class EasyRedmineRestApi implements EasyRedmineRestApiInterface
 	}
 
 	/**
+	 * Trims all values of array with recursion for multidimensional
+	 *
+	 * @param array|string $array
+	 *
+	 * @return array|string
+	 */
+	public static function trimArray($array)
+	{
+		return is_array($array) ? array_map('EasyRedmineRestApi::trimArray', $array) : trim($array);
+	}
+
+	/**
 	 * Sends a http request using CURL
 	 *
 	 * @param string $path
@@ -712,14 +734,9 @@ class EasyRedmineRestApi implements EasyRedmineRestApiInterface
 	 *
 	 * @return StdClass
 	 */
-	protected function _sendRequest($path = '', $method = 'get', $xml = null, $params = array())
+	protected function _sendRequest($path = '', $method = 'get', $xml = null, $params = [])
 	{
-		foreach ((array) $params as $pk => $pv)
-		{
-			unset($params[$pk]);
-			$params[trim($pk)] = trim($pv);
-		}
-
+		$params = self::trimArray($params);
 		$method = strtolower($method);
 		$c      = curl_init();
 		$uri    = JURI::getInstance($this->er_url);
@@ -732,7 +749,7 @@ class EasyRedmineRestApi implements EasyRedmineRestApiInterface
 		}
 		else
 		{
-			$uri->setQuery(array());
+			$uri->setQuery([]);
 		}
 
 		if ($this->lang_parameter != '' and $this->lang != '')
@@ -742,11 +759,12 @@ class EasyRedmineRestApi implements EasyRedmineRestApiInterface
 
 		curl_setopt($c, CURLOPT_URL, $uri->toString());
 		curl_setopt($c, CURLOPT_RETURNTRANSFER, 1);
+		curl_setopt($c, CURLOPT_SSL_VERIFYHOST, false);
 		curl_setopt($c, CURLOPT_SSL_VERIFYPEER, false);
 		curl_setopt($c, CURLOPT_CONNECTTIMEOUT, $this->curl_connect_timeout);
 		curl_setopt($c, CURLOPT_TIMEOUT, $this->curl_timeout);
 
-		$headers = array('X-Redmine-API-Key: ' . $this->api_key);
+		$headers = ['X-Redmine-API-Key: ' . $this->api_key];
 
 		if (!empty($xml) and $method != 'upload')
 		{
@@ -905,9 +923,9 @@ class EasyRedmineRestApi implements EasyRedmineRestApiInterface
 
 			$http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
 
-			if ($http_code == 301 || $http_code == 302)
+			if ($this->allow_redirects and ($http_code == 301 || $http_code == 302))
 			{
-				$matches = array();
+				$matches = [];
 
 				preg_match('/Location: (.*)/', $header, $matches);
 
@@ -996,7 +1014,7 @@ class EasyRedmineRestApi implements EasyRedmineRestApiInterface
 		if ($this->write_log)
 		{
 			jimport('joomla.log.log');
-			JLog::addLogger(array('text_file' => 'lib_easyredmine_api.log.php'), JLog::ALL, 'lib_easyredmine_api');
+			JLog::addLogger(['text_file' => 'lib_easyredmine_api.log.php'], JLog::ALL, 'lib_easyredmine_api');
 		}
 
 		return true;
@@ -1014,7 +1032,7 @@ class EasyRedmineRestApi implements EasyRedmineRestApiInterface
 //			return $this->_throwException('Missing argument(s) $er_url and/or $api_key in ' . get_class($this) . '::__construct()');
 //		}
 
-		if (!filter_var($this->er_url, FILTER_VALIDATE_URL, array(FILTER_FLAG_SCHEME_REQUIRED, FILTER_FLAG_HOST_REQUIRED)))
+		if (!filter_var($this->er_url, FILTER_VALIDATE_URL, [FILTER_FLAG_SCHEME_REQUIRED, FILTER_FLAG_HOST_REQUIRED]))
 		{
 			return $this->_throwException('Invalid argument $er_url in ' . get_class($this) . '::__construct()');
 		}
@@ -1071,7 +1089,7 @@ class EasyRedmineRestApi implements EasyRedmineRestApiInterface
 		}
 		else
 		{
-			$this->errors = array();
+			$this->errors = [];
 			$this->setError($array);
 		}
 

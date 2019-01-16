@@ -1,0 +1,9 @@
+{
+	"name": "easysoftware/lib_easyredmine_api",
+	"type": "joomlatools-composer",
+	"license": "proprietary",
+	"description": "lib_easyredmine_api",
+	"require": {
+		"joomlatools/composer": "*"
+	}
+}

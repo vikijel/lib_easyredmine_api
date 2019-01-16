@@ -23,24 +23,20 @@ class EasyRedmineRestApiEasyContactsAssignEntities extends EasyRedmineRestApi
 	/** @var string $context_one */
 	protected $context_one = 'easy_contact_ids';
 
+	/**
+	 * @param object $object (object)['entity_type','entity_ids','ids']
+	 * @param null   $response
+	 *
+	 * @return bool
+	 */
 	public function store(&$object, &$response = null)
 	{
-		$params = array(
+		$params   = [
 			'entity_type' => $object->entity_type,
-			'entity_ids'  => $object->entity_ids
-		);
-
-		$xml = new EasyRedmineXMLElement('<' . $this->context_one . '/>');
-		$xml->addAttribute('type', 'array');
-
-		$object->ids = (array)$object->ids;
-
-		foreach ($object->ids as $id)
-		{
-			$xml->addChild('id', $id);
-		}
-
-		$response = $this->_sendRequest('/' . $this->context . '.xml', 'post', $xml->asXML(), $params); //create
+			'entity_ids'  => $object->entity_ids,
+			'ids'         => $object->ids
+		];
+		$response = $this->_sendRequest('/' . $this->context . '.xml', 'post', null, $params);
 
 		if ($response->code != 200 and $response->code != 201)
 		{
@@ -49,7 +45,8 @@ class EasyRedmineRestApiEasyContactsAssignEntities extends EasyRedmineRestApi
 				$this->setErrors((array) $response->body->error);
 			}
 
-			$this->_writeLog('Store() - insert for context "' . $this->context . '/' . $this->context_one . '" failed: ' . implode($this->getErrors()), JLog::ERROR);
+			$this->_writeLog('Store() - insert for context "' . $this->context . '/' . $this->context_one . '" failed: ' . implode($this->getErrors()),
+			                 JLog::ERROR);
 
 			return false;
 		}
