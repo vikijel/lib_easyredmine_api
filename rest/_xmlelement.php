@@ -75,6 +75,23 @@ class EasyRedmineXmlElement extends SimpleXMLElement
 		$node = dom_import_simplexml($this);
 		$no   = $node->ownerDocument;
 
+		static $mb;
+
+		if (!isset($mb))
+		{
+			$mb = (function_exists('mb_detect_encoding') and function_exists('mb_convert_encoding'));
+		}
+
+		if ($mb)
+		{
+			$enc = mb_detect_encoding($cdata_text);
+
+			if ($enc and $enc != 'UTF-8')
+			{
+				$cdata_text = mb_convert_encoding($cdata_text, 'UTF-8', $enc);
+			}
+		}
+
 		$node->appendChild($no->createCDATASection($cdata_text));
 	}
 }

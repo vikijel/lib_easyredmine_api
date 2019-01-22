@@ -761,6 +761,7 @@ class EasyRedmineRestApi implements EasyRedmineRestApiInterface
 		curl_setopt($c, CURLOPT_RETURNTRANSFER, 1);
 		curl_setopt($c, CURLOPT_SSL_VERIFYHOST, false);
 		curl_setopt($c, CURLOPT_SSL_VERIFYPEER, false);
+		curl_setopt($c, CURLOPT_SSLVERSION, CURL_SSLVERSION_TLSv1_2);
 		curl_setopt($c, CURLOPT_CONNECTTIMEOUT, $this->curl_connect_timeout);
 		curl_setopt($c, CURLOPT_TIMEOUT, $this->curl_timeout);
 

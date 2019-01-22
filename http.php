@@ -139,6 +139,8 @@ class EasyRedmineHttpApi
 		curl_setopt($c, CURLOPT_URL, $uri->toString());
 		curl_setopt($c, CURLOPT_RETURNTRANSFER, 1);
 		curl_setopt($c, CURLOPT_SSL_VERIFYPEER, false);
+		curl_setopt($c, CURLOPT_SSL_VERIFYHOST, false);
+		curl_setopt($c, CURLOPT_SSLVERSION, CURL_SSLVERSION_TLSv1_2);
 
 		switch ($method)
 		{
