@@ -1,6 +1,10 @@
 #	lib_easyredmine_api
 -	Joomla library for using [EasyRedmine](https://www.easyredmine.com) / [Redmine](http://www.redmine.org) REST API to create or manage issues, projects and many more from within Joomla! extensions.
 
+## OBSOLETE / DEPRECATED / NOT MAINTAINED => GOTO: 
+-   https://www.easyredmine.com/resources/rest-api
+-   https://app.swaggerhub.com/apis-docs/easysoftware/EasyProject/ 
+
 ##	About
 -	Author:    Easy Software s.r.o. <info@easysoftware.cz>
 -	License:   http://opensource.org/licenses/GPL-3.0 GPL-3.0
