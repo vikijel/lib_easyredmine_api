@@ -593,40 +593,33 @@ class EasyRedmineRestApi implements EasyRedmineRestApiInterface
 			}
 		}
 
-		if (isset($object->id) and (int) $object->id > 0)
+		$is_update = (isset($object->id) and (int) $object->id > 0);
+
+		if ($is_update)
 		{
 			$response = $this->_sendRequest('/' . $this->context . '/' . (int) $object->id . '.xml', 'put', $xml->asXML()); //edit/update
-
-			if ($response->code != 200)
-			{
-				if (isset($response->body->error))
-				{
-					$this->setErrors((array) $response->body->error);
-				}
-
-				$this->_writeLog('Store() - update for context "' . $this->context . '/' . $this->context_one . '" failed: ' . implode($this->getErrors()), JLog::ERROR);
-
-				return false;
-			}
 		}
 		else
 		{
 			$response = $this->_sendRequest('/' . $this->context . '.xml', 'post', $xml->asXML()); //create
-
-			if ($response->code != 201)
-			{
-				if (isset($response->body->error))
-				{
-					$this->setErrors((array) $response->body->error);
-				}
-
-				$this->_writeLog('Store() - insert for context "' . $this->context . '/' . $this->context_one . '" failed: ' . implode($this->getErrors()), JLog::ERROR);
-
-				return false;
-			}
 		}
 
-		$object->id = (isset($response->body->id) and (int) $response->body->id) ? (int) $response->body->id : $object->id;
+		if (!$response->code or $response->code >= 400)
+		{
+			if (isset($response->body->error))
+			{
+				$this->setErrors((array) $response->body->error);
+			}
+
+			$this->_writeLog('Store() - ' . ($is_update ? 'update' : 'insert') . ' for context "' . $this->context . '/' . $this->context_one . '" failed: ' . implode($this->getErrors()), JLog::ERROR);
+
+			return false;
+		}
+
+		if (isset($response->body->id) and (int) $response->body->id)
+		{
+			$object->id = (int) $response->body->id;
+		}
 
 		return true;
 	}
@@ -870,7 +863,15 @@ class EasyRedmineRestApi implements EasyRedmineRestApiInterface
 		}
 		else
 		{
-			$this->_writeLog('Response is empty or is not of */xml content-type', JLog::WARNING);
+			if (trim($response) != '')
+			{
+				$this->_writeLog('Response is not */xml content-type', JLog::WARNING);
+			}
+			elseif ($return->code != 204)
+			{
+				$this->_writeLog('Response is empty', JLog::WARNING);
+			}
+
 			$return->body = $response;
 		}
 

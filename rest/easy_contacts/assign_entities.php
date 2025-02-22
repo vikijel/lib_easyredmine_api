@@ -38,7 +38,7 @@ class EasyRedmineRestApiEasyContactsAssignEntities extends EasyRedmineRestApi
 		];
 		$response = $this->_sendRequest('/' . $this->context . '.xml', 'post', null, $params);
 
-		if ($response->code != 200 and $response->code != 201)
+		if (!$response->code or $response->code >= 400)
 		{
 			if (isset($response->body->error))
 			{
